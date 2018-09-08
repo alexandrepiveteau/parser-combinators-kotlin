@@ -87,3 +87,24 @@ fun <O1, O2, E> Parser<O1, E>.or(other: Parser<O2, E>): Parser<Either<O2, O1>, E
                 is Either.Value -> eitherValue<E, Pair<Either<O2, O1>, String>>(eitherValue<O2, O1>(result1.value.first) to result1.value.second)
             }
         }
+
+fun <O, E> Parser<O, E>.loop(): Parser<List<O>, E> =
+        Parser { text ->
+            val elements = mutableListOf<O>()
+            var remainder = text
+            val out: Either<E, Pair<List<O>, String>>
+            iterator@ while (true) {
+                val result = this.parse(remainder)
+                when (result) {
+                    is Either.Error -> {
+                        out = eitherValue(elements to remainder)
+                        break@iterator
+                    }
+                    is Either.Value -> {
+                        elements += result.value.first
+                        remainder = result.value.second
+                    }
+                }
+            }
+            return@Parser out
+        }
