@@ -26,13 +26,13 @@ package com.github.alexandrepiveteau.parsers
 
 import com.github.alexandrepiveteau.functional.monads.*
 
-class Parser<O, E>(private val f: (String) -> Either<E, Pair<O, String>>) {
+class Parser<I, O, E>(private val f: (I) -> Either<E, Pair<O, I>>) {
 
-    fun parse(text: String): Either<E, Pair<O, String>> = f(text)
+    fun parse(text: I): Either<E, Pair<O, I>> = f(text)
 
     companion object Factory {
 
-        fun <E> char(char: Char, f: (Char) -> E): Parser<Char, E> =
+        fun <E> char(char: Char, f: (Char) -> E): Parser<String, Char, E> =
                 Parser { text ->
                     return@Parser if (text.firstOrNull() == char)
                         eitherValue<E, Pair<Char, String>>(char to text.drop(1))
@@ -40,8 +40,8 @@ class Parser<O, E>(private val f: (String) -> Either<E, Pair<O, String>>) {
                         eitherError(f(char))
                 }
 
-        fun <O, E> fail(f: () -> E): Parser<O, E> = Parser { eitherError<E, Pair<O, String>>(f()) }
-        fun <O, E> lazy(f: () -> Parser<O, E>): Parser<O, E> = Parser { text -> f().parse(text) }
-        fun <E> succeed(): Parser<Unit, E> = Parser { eitherValue<E, Pair<Unit, String>>(Unit to it) }
+        fun <I, O, E> fail(f: () -> E): Parser<I, O, E> = Parser { eitherError(f()) }
+        fun <I, O, E> lazy(f: () -> Parser<I, O, E>): Parser<I, O, E> = Parser { input -> f().parse(input) }
+        fun <I, E> succeed(): Parser<I, Unit, E> = Parser { eitherValue(Unit to it) }
     }
 }

@@ -26,46 +26,46 @@ package com.github.alexandrepiveteau.parsers
 
 import com.github.alexandrepiveteau.functional.monads.*
 
-fun <O1, O2, E> Parser<O1, E>.map(f: (O1) -> O2): Parser<O2, E> =
-        Parser { text -> parse(text).toValue().map { (o, r) -> f(o) to r }.either }
+fun <I, O1, O2, E> Parser<I, O1, E>.map(f: (O1) -> O2): Parser<I, O2, E> =
+        Parser { input -> parse(input).toValue().map { (o, r) -> f(o) to r }.either }
 
-fun <O1, O2, E> Parser<O1, E>.flatMap(f: (O1) -> Either<E, O2>): Parser<O2, E> =
-        Parser { text ->
-            val result = this.parse(text)
+fun <I, O1, O2, E> Parser<I, O1, E>.flatMap(f: (O1) -> Either<E, O2>): Parser<I, O2, E> =
+        Parser { input ->
+            val result = this.parse(input)
             return@Parser when (result) {
-                is Either.Error -> eitherError<E, Pair<O2, String>>(result.error)
+                is Either.Error -> eitherError<E, Pair<O2, I>>(result.error)
                 is Either.Value -> {
                     val mappedResult = f(result.value.first)
                     return@Parser when (mappedResult) {
-                        is Either.Error -> eitherError<E, Pair<O2, String>>(mappedResult.error)
+                        is Either.Error -> eitherError<E, Pair<O2, I>>(mappedResult.error)
                         is Either.Value -> eitherValue(mappedResult.value to result.value.second)
                     }
                 }
             }
         }
 
-fun <O1, O2, E> Parser<O1, E>.and(other: Parser<O2, E>): Parser<Pair<O1, O2>, E> =
-        Parser { text ->
-            val result1 = this.parse(text)
+fun <I, O1, O2, E> Parser<I, O1, E>.and(other: Parser<I, O2, E>): Parser<I, Pair<O1, O2>, E> =
+        Parser { input ->
+            val result1 = this.parse(input)
             return@Parser when (result1) {
-                is Either.Error -> eitherError<E, Pair<Pair<O1, O2>, String>>(result1.error)
+                is Either.Error -> eitherError<E, Pair<Pair<O1, O2>, I>>(result1.error)
                 is Either.Value -> {
                     val result2 = other.parse(result1.value.second)
                     return@Parser when (result2) {
-                        is Either.Error -> eitherError<E, Pair<Pair<O1, O2>, String>>(result2.error)
+                        is Either.Error -> eitherError<E, Pair<Pair<O1, O2>, I>>(result2.error)
                         is Either.Value -> eitherValue(result1.value.first to result2.value.first to result2.value.second)
                     }
                 }
             }
         }
 
-fun <O1, O2, E> Parser<O1, E>.after(other: Parser<O2, E>): Parser<O2, E> =
+fun <I, O1, O2, E> Parser<I, O1, E>.after(other: Parser<I, O2, E>): Parser<I, O2, E> =
         and(other).map { (_, b) -> b }
 
-fun <O1, O2, E> Parser<O1, E>.before(other: Parser<O2, E>): Parser<O1, E> =
+fun <I, O1, O2, E> Parser<I, O1, E>.before(other: Parser<I, O2, E>): Parser<I, O1, E> =
         and(other).map { (a, _) -> a }
 
-fun <O, E> Parser<O, E>.flatOr(other: Parser<O, E>): Parser<O, E> =
+fun <I, O, E> Parser<I, O, E>.flatOr(other: Parser<I, O, E>): Parser<I, O, E> =
         or(other).map { either ->
             return@map when (either) {
                 is Either.Error -> either.error
@@ -73,26 +73,26 @@ fun <O, E> Parser<O, E>.flatOr(other: Parser<O, E>): Parser<O, E> =
             }
         }
 
-fun <O1, O2, E> Parser<O1, E>.or(other: Parser<O2, E>): Parser<Either<O2, O1>, E> =
-        Parser { text ->
-            val result1 = this.parse(text)
+fun <I, O1, O2, E> Parser<I, O1, E>.or(other: Parser<I, O2, E>): Parser<I, Either<O2, O1>, E> =
+        Parser { input ->
+            val result1 = this.parse(input)
             return@Parser when (result1) {
                 is Either.Error -> {
-                    val result2 = other.parse(text)
+                    val result2 = other.parse(input)
                     return@Parser when (result2) {
-                        is Either.Error -> eitherError<E, Pair<Either<O2, O1>, String>>(result2.error)
+                        is Either.Error -> eitherError<E, Pair<Either<O2, O1>, I>>(result2.error)
                         is Either.Value -> eitherValue(eitherError<O2, O1>(result2.value.first) to result2.value.second)
                     }
                 }
-                is Either.Value -> eitherValue<E, Pair<Either<O2, O1>, String>>(eitherValue<O2, O1>(result1.value.first) to result1.value.second)
+                is Either.Value -> eitherValue<E, Pair<Either<O2, O1>, I>>(eitherValue<O2, O1>(result1.value.first) to result1.value.second)
             }
         }
 
-fun <O, E> Parser<O, E>.loop(): Parser<List<O>, E> =
-        Parser { text ->
+fun <I, O, E> Parser<I, O, E>.loop(): Parser<I, List<O>, E> =
+        Parser { input ->
             val elements = mutableListOf<O>()
-            var remainder = text
-            val out: Either<E, Pair<List<O>, String>>
+            var remainder = input
+            val out: Either<E, Pair<List<O>, I>>
             iterator@ while (true) {
                 val result = this.parse(remainder)
                 when (result) {
