@@ -33,7 +33,7 @@ The library contains a single module, versioned using **semantic versioning** :
 
 ### parser-combinators
 
-A `Parser<Input, Output, Error>` is a structure accepting a `Input` as input, and returning an `Either<Error, Pair<Output, Input>>`, where the `Error` case of the `Either` represents a problem that occured while parsing the input, and the `Value` case of the `Either` represents a pair of the parser output, and the remaining `Input` that has not been parsed yet. A parser combinator is a function that accepts one or multiple parsers as input and outputs a different parser.
+A `Parser<Input, Output, Error>` is a structure accepting a `Input` as input, and returning an `Either<Error, Pair<Output, Input>>`, where the `Error` case of the `Either` represents a problem that occurred while parsing the input, and the `Value` case of the `Either` represents a pair of the parser output, and the remaining `Input` that has not been parsed yet. A parser combinator is a function that accepts one or multiple parsers as input and outputs a different parser.
 
 Each `Parser` instance is just an immutable wrapper around a parsing function. Therefore, it is easily possible to create your own instances of `Parser` from scratch. Nevertheless, some default `Parser` implementations are provided :
 
