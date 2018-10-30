@@ -22,7 +22,8 @@ You can now add the library modules in your application **build.gradle** file :
 
 ```
 dependencies {
-	implementation "com.github.alexandrepiveteau:parser-combinators-kotlin:1.0.0"
+	implementation "com.github.alexandrepiveteau.parser-combinators-kotlin:parser-combinators:1.1.0"
+    implementation "com.github.alexandrepiveteau.parser-combinators-kotlin:parser-combinators-primitives:1.1.0"
 }
 ```
 
@@ -30,6 +31,7 @@ dependencies {
 The library contains a single module, versioned using **semantic versioning** :
 
 - **parser-combinators** - Offers some primitives for building `Parser` instances, and combinators for manipulating `Parser` instances.
+- **parser-combinators-primitives** - Offers some functions for building `Parser` on primitive data types in Kotlin.
 
 ### parser-combinators
 
@@ -38,12 +40,6 @@ A `Parser<Input, Output, Error>` is a structure accepting a `Input` as input, an
 Each `Parser` instance is just an immutable wrapper around a parsing function. Therefore, it is easily possible to create your own instances of `Parser` from scratch. Nevertheless, some default `Parser` implementations are provided :
 
 ```kotlin
-/*
- * This Parser eats a single character from the input sequence, if and only if this
- * character corresponds to the given input.
- */
-val a = Parser.char('a') { char -> "The character $char was not found." }
-
 /*
  * This Parser will always fail, no matter what input sequence is provided to it. This can
  * be useful when combining multiple Parsers together.
