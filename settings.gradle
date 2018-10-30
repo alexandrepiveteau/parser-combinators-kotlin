@@ -22,4 +22,6 @@
  * SOFTWARE.
  */
 
-include ':app', ':parser-combinators'
+include ':app'
+include ':parser-combinators'
+include ':parser-combinators-primitives'
