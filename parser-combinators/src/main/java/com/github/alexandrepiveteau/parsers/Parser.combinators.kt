@@ -55,13 +55,11 @@ fun <I, O1, O2, E> Parser<I, O1, E>.after(other: Parser<I, O2, E>): Parser<I, O2
  */
 fun <I, O1, O2, E> Parser<I, O1, E>.and(other: Parser<I, O2, E>): Parser<I, Pair<O1, O2>, E> =
         Parser { input ->
-            val result1 = this.parse(input)
-            return@Parser when (result1) {
-                is Either.Error -> eitherError<E, Pair<Pair<O1, O2>, I>>(result1.error)
+            return@Parser when (val result1 = this.parse(input)) {
+                is Either.Error -> eitherError(result1.error)
                 is Either.Value -> {
-                    val result2 = other.parse(result1.value.second)
-                    return@Parser when (result2) {
-                        is Either.Error -> eitherError<E, Pair<Pair<O1, O2>, I>>(result2.error)
+                    return@Parser when (val result2 = other.parse(result1.value.second)) {
+                        is Either.Error -> eitherError(result2.error)
                         is Either.Value -> eitherValue(result1.value.first to result2.value.first to result2.value.second)
                     }
                 }
@@ -92,13 +90,11 @@ fun <I, O1, O2, E> Parser<I, O1, E>.before(other: Parser<I, O2, E>): Parser<I, O
  */
 fun <I, O1, O2, E> Parser<I, O1, E>.flatMap(f: (O1) -> Either<E, O2>): Parser<I, O2, E> =
         Parser { input ->
-            val result = this.parse(input)
-            return@Parser when (result) {
-                is Either.Error -> eitherError<E, Pair<O2, I>>(result.error)
+            return@Parser when (val result = this.parse(input)) {
+                is Either.Error -> eitherError(result.error)
                 is Either.Value -> {
-                    val mappedResult = f(result.value.first)
-                    return@Parser when (mappedResult) {
-                        is Either.Error -> eitherError<E, Pair<O2, I>>(mappedResult.error)
+                    return@Parser when (val mappedResult = f(result.value.first)) {
+                        is Either.Error -> eitherError(mappedResult.error)
                         is Either.Value -> eitherValue(mappedResult.value to result.value.second)
                     }
                 }
@@ -209,15 +205,13 @@ fun <I, O, E> Parser<I, O, E>.optional(): Parser<I, Maybe<O>, E> =
  */
 fun <I, O1, O2, E> Parser<I, O1, E>.or(other: Parser<I, O2, E>): Parser<I, Either<O2, O1>, E> =
         Parser { input ->
-            val result1 = this.parse(input)
-            return@Parser when (result1) {
+            return@Parser when (val result1 = parse(input)) {
                 is Either.Error -> {
-                    val result2 = other.parse(input)
-                    return@Parser when (result2) {
-                        is Either.Error -> eitherError<E, Pair<Either<O2, O1>, I>>(result2.error)
+                    return@Parser when (val result2 = other.parse(input)) {
+                        is Either.Error -> eitherError(result2.error)
                         is Either.Value -> eitherValue(eitherError<O2, O1>(result2.value.first) to result2.value.second)
                     }
                 }
-                is Either.Value -> eitherValue<E, Pair<Either<O2, O1>, I>>(eitherValue<O2, O1>(result1.value.first) to result1.value.second)
+                is Either.Value -> eitherValue(eitherValue<O2, O1>(result1.value.first) to result1.value.second)
             }
         }
